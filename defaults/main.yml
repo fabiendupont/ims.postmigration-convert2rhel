@@ -1,0 +1,3 @@
+rhel_variant: Server
+convert2rhel_timeout: 14400
+convert2rhel_retry_interval: 15

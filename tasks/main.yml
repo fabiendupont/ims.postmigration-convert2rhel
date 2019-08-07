@@ -1,0 +1,86 @@
+---
+- name: Assert if operating system is not RHEL
+  assert:
+    that:
+      - "ansible_distribution != 'RedHat'"
+    msg: "The distribution is {{ ansible_distribution }}. It must be CentOS or Oracle Linux. Quitting"
+
+- name: Assert that subscription-manager variables are defined
+  assert:
+    that:
+      - "rhsm_username is defined"
+      - "rhsm_password is defined"
+      - "rhsm_pool is defined"
+    msg: "Subscription manager variables are not defined. See documentation."
+
+- name: Assert that the RHEL variant is defined
+  assert:
+    that:
+      - "rhel_variant is defined"
+#      - "rhel_variant in supported_rhel_variants"
+    msg: "RHEL variant is not defined or unsupported. See documentation."
+
+- name: Create snapshot before conversion
+  include_role:
+    name: "ims.manageiq_vm_snapshot"
+  vars:
+    role_action: "create"
+    snapshot_name: "Before convert2rhel"
+    snapshot_mode: "cold"
+
+- block:
+    - name: Install convert2rhel package
+      yum:
+        name:
+          - "{{ convert2rhel_package_url }}"
+        state: present
+
+    - name: Modify /etc/yum.conf on CentOS
+      lineinfile:
+        regexp: "^distroverpkg"
+        state: absent
+        path: /etc/yum.conf
+      when: ansible_distribution == 'CentOS'
+
+    - block:
+        - name: Install required packages on Oracle
+          yum:
+            name:
+              - python-six
+            state: present
+
+        - name: Remove blocking packages on Oracle
+          yum:
+            name:
+              - rhn-client-tools
+            state: absent
+
+      when: ansible_distribution == 'OracleLinux' 
+
+    - name: Launch conversion asynchronously
+      command: convert2rhel -u {{ rhsm_username }} -p {{ rhsm_password }} --pool {{ rhsm_pool }} -v {{ rhel_variant }} -y
+      async: "{{ convert2rhel_timeout }}"
+      poll: 0
+      register: convert2rhel_async
+
+    - name: Check if conversion is finished
+      async_status:
+        jid: "{{ convert2rhel_async.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: "{{ ( convert2rhel_timeout / convert2rhel_retry_interval ) | int }}"
+      delay: "{{ convert2rhel_retry_interval }}"
+
+    - name: Reboot machine with a 15 minutes timeout
+      reboot:
+        reboot_timeout: 900
+
+  rescue:
+    - name: Revert snapshot to previous state
+      include_role:
+        name: "ims.manageiq_vm_snapshot"
+      vars:
+        role_action: "revert"
+        snapshot_name: "Before convert2rhel"
+        snapshot_mode: "cold"
+        snapshot_delete_after_revert: true

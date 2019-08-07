@@ -1,0 +1,10 @@
+[mbocek-convert2rhel]
+name=Copr repo for convert2rhel owned by mbocek
+baseurl=http://coprbe.devel.redhat.com/results/mbocek/convert2rhel/rhel-7-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=0
+gpgkey=http://coprbe.devel.redhat.com/results/mbocek/convert2rhel/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
