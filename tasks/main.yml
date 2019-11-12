@@ -35,13 +35,6 @@
           - "{{ convert2rhel_package_url }}"
         state: present
 
-    - name: Modify /etc/yum.conf on CentOS
-      lineinfile:
-        regexp: "^distroverpkg"
-        state: absent
-        path: /etc/yum.conf
-      when: ansible_distribution == 'CentOS'
-
     - block:
         - name: Install required packages on Oracle
           yum:
