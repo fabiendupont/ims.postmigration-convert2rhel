@@ -35,6 +35,13 @@
           - "{{ convert2rhel_package_url }}"
         state: present
 
+    - name: Add 7Server to file /etc/yum/vars/releasever if it does not exist on CentOS systems
+      lineinfile:
+        path: /etc/yum/vars/releasever
+        line: 7Server
+        create: yes
+      when: ansible_distribution == 'CentOS'
+
     - block:
         - name: Install required packages on Oracle
           yum:
