@@ -35,12 +35,12 @@
           - "{{ convert2rhel_package_url }}"
         state: present
 
-    - name: "Add {{ ansible_distribution_major_version }}Server to file /etc/yum/vars/releasever if it does not exist on this CentOS {{ ansible_distribution_major_version }} system"
+    - name: Add 7Server to file /etc/yum/vars/releasever if it does not exist on CentOS systems
       lineinfile:
         path: /etc/yum/vars/releasever
-        line: "{{ ansible_distribution_major_version }}Server"
+        line: 7Server
         create: yes
-      when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version == '6') or (ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7')
+      when: ansible_distribution == 'CentOS'
 
     - block:
         - name: Install required packages on Oracle
@@ -61,7 +61,7 @@
       command: convert2rhel -u {{ rhsm_username }} -p {{ rhsm_password }} --pool {{ rhsm_pool }} -v {{ rhel_variant }} -y
       async: "{{ convert2rhel_timeout }}"
       poll: 0
-      register: convert2rhel_async%24releasever
+      register: convert2rhel_async
 
     - name: Check if conversion is finished
       async_status:
