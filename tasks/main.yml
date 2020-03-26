@@ -13,6 +13,13 @@
       - "satellite_organization is defined"
     msg: "Subscription manager variables are not defined. See documentation."
 
+- debug:
+    var: "{{ item }}"
+  with_items:
+    - satellite_host
+    - satellite_activationkey
+    - satellite_organization
+
 - name: Assert that the RHEL variant is defined
   assert:
     that:
