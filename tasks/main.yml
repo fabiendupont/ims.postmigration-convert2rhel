@@ -8,9 +8,9 @@
 - name: Assert that subscription-manager variables are defined
   assert:
     that:
-      - "rhsm_username is defined"
-      - "rhsm_password is defined"
-      - "rhsm_pool is defined"
+      - "satellite_host is defined"
+      - "satellite_activationkey is defined"
+      - "satellite_organization is defined"
     msg: "Subscription manager variables are not defined. See documentation."
 
 - name: Assert that the RHEL variant is defined
