@@ -65,9 +65,7 @@
       when: ansible_distribution == 'OracleLinux' 
 
     - name: Install Katello CA certificate for Satellite
-      yum:
-        name: "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
-        state: present
+      command: "yum install http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
 
     - name: Launch conversion asynchronously
       command: convert2rhel -k {{ satellite_activationkey }} -o {{ satellite_organization }} -a -v {{ rhel_variant }} -y
