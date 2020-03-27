@@ -36,10 +36,16 @@
     snapshot_mode: "cold"
 
 - block:
+    - name: Install EPEL repository
+      yum:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        state: present
+        update_cache: yes
+
     - name: Install convert2rhel and Katello CA packages
       yum:
         name:
-          - "{{ convert2rhel_package_url }}"
+          - convert2rhel
           - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
         state: present
         update_cache: yes
