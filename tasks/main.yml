@@ -97,7 +97,7 @@
     - name: Register to Satellite
       redhat_subscription:
         state: present
-        activation_key: "{{ satellite_activationkey }}"
+        activationkey: "{{ satellite_activationkey }}"
         org_id: "{{ satellite_organization }}"
         auto_attach: yes
 
