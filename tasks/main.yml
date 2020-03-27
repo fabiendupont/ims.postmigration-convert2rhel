@@ -36,17 +36,10 @@
     snapshot_mode: "cold"
 
 - block:
-    - name: Install EPEL repository
-      yum:
-        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-        state: present
-        update_cache: yes
-
-    - name: Install convert2rhel and Katello CA packages
+    - name: Install convert2rhel package
       yum:
         name:
-          - convert2rhel
-          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+          - "{{ convert2rhel_package_url }}"
         state: present
         update_cache: yes
 
@@ -73,7 +66,7 @@
       when: ansible_distribution == 'OracleLinux' 
 
     - name: Launch conversion asynchronously
-      command: convert2rhel -k {{ satellite_activationkey }} -o {{ satellite_organization }} -a -v {{ rhel_variant }} -y
+      command: convert2rhel -u {{ rhsm_username }} -p {{ rhsm_password }} --pool {{ rhsm_pool }} -v {{ rhel_variant }} -y
       async: "{{ convert2rhel_timeout }}"
       poll: 0
       register: convert2rhel_async
@@ -89,6 +82,24 @@
     - name: Reboot machine with a 15 minutes timeout
       reboot:
         reboot_timeout: 900
+
+    - name: Unregister from RHN
+      redhat_subscription:
+        state: absent
+
+    - name: Install Katello CA packages
+      yum:
+        name:
+          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+        state: present
+        update_cache: yes
+
+    - name: Register to Satellite
+      redhat_subscription:
+        state: present
+        activation_key: "{{ satellite_activationkey }}"
+        org_id: "{{ satellite_organization }}"
+        auto_attach: yes
 
     - name: Install required packages for Insights
       yum:
