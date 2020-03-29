@@ -109,6 +109,7 @@
           - katello-host-tools-tracer
           - insights-client
         state: present
+        update_cache: yes
 
     - name: Retrieve Satellite SSH public key in temporary file
       get_url:
