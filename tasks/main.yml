@@ -119,7 +119,7 @@
     - name: Add Satellite SSH public key to authorized keys
       lineinfile:
         path: /root/.ssh/authorized_keys
-        line: "{{ lookup('url', 'https://' + satellite_host + ':9090/ssh/pubkey', split_line=False, validate_certs=no) }}"
+        line: "{{ lookup('url', 'https://' + satellite_host + ':9090/ssh/pubkey', split_line=False, validate_certs=False) }}"
 
     - name: Register machine to Insights
       command: insights-client --register
