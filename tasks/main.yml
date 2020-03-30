@@ -116,24 +116,10 @@
         state: present
         update_cache: yes
 
-    - name: Retrieve Satellite SSH public key in temporary file
-      get_url:
-        url: "https://{{ satellite_host }}:9090/ssh/pubkey"
-        validate_certs: no
-        dest: /tmp/sat_pub_key
-        owner: root
-        group: root
-        mode: 0600
-
     - name: Add Satellite SSH public key to authorized keys
       lineinfile:
         path: /root/.ssh/authorized_keys
-        line: "{{ lookup('file', '/tmp/sat_pub_key') }}"
-
-    - name: Remove temporary Satellite SSH public key file
-      file:
-        path: /tmp/sat_pub_key
-        state: absent
+        line: "{{ lookup('url', 'https://' + satellite_host + ':9090/ssh/pubkey', split_line=False, validate_certs=no) }}"
 
     - name: Register machine to Insights
       command: insights-client --register
