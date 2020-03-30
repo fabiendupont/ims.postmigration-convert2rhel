@@ -87,8 +87,10 @@
       redhat_subscription:
         state: absent
 
-    - name: Clear YUM cache
-      command: yum clean all
+    - name: Clear YUM cache the hard way
+      file:
+        path: /var/cache/yum
+        state: absent
 
     - name: Install Katello CA packages
       yum:
