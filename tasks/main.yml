@@ -121,7 +121,7 @@
       when: ansible_distribution == 'OracleLinux' 
 
     - name: Launch conversion asynchronously
-      command: convert2rhel -o {{ satellite_organization }} -k {{ satellite_activationkey }} -v {{ rhel_variant }} -y --debug
+      command: convert2rhel -o {{ satellite_organization }} -k {{ satellite_activationkey }} -v {{ rhel_variant }} -a -y --debug
       async: "{{ convert2rhel_timeout }}"
       poll: 0
       register: convert2rhel_async
