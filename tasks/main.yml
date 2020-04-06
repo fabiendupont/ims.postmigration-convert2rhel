@@ -67,9 +67,13 @@
           - subscription-manager
           - subscription-manager-rhsm
           - subscription-manager-rhsm-certificates
-          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
         download_only: yes
         download_dir: /usr/share/convert2rhel/subscription-manager
+
+    - name: Download Satellite CA certificate
+      get_url:
+        url: "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+        dest: /usr/share/convert2rhel/subscription-manager/katello-ca-consumer-latest.noarch.rpm
 
     - name: Identify redhat-release-server package path
       find:
@@ -157,12 +161,12 @@
     - name: Register machine to Insights
       command: insights-client --register
 
-  rescue:
-    - name: Revert snapshot to previous state
-      include_role:
-        name: "ims.manageiq_vm_snapshot"
-      vars:
-        role_action: "revert"
-        snapshot_name: "Before convert2rhel"
-        snapshot_mode: "cold"
-        snapshot_delete_after_revert: true
+#  rescue:
+#    - name: Revert snapshot to previous state
+#      include_role:
+#        name: "ims.manageiq_vm_snapshot"
+#      vars:
+#        role_action: "revert"
+#        snapshot_name: "Before convert2rhel"
+#        snapshot_mode: "cold"
+#        snapshot_delete_after_revert: true
