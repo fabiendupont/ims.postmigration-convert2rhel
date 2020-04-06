@@ -36,12 +36,63 @@
     snapshot_mode: "cold"
 
 - block:
+    - name: Enabled EPEL repository
+      yum:
+        name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        state: present
+        update_cache: yes
+
     - name: Install convert2rhel package
       yum:
         name:
-          - "{{ convert2rhel_package_url }}"
+          - convert2rhel
         state: present
         update_cache: yes
+
+    - name: Create extra folders for convert2rhel
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+      with_items:
+        - /usr/share/convert2rhel/subscription-manager
+        - /usr/share/convert2rhel/redhat-release/Server
+        - /var/lib/rpm-state
+
+    - name: Download subscription-manager packages
+      yum:
+        name:
+          - subscription-manager
+          - subscription-manager-rhsm
+          - subscription-manager-rhsm-certificates
+          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+        download_only: yes
+        download_dir: /usr/share/convert2rhel/subscription-manager
+
+    - name: Identify redhat-release-server package path
+      find:
+        paths: /var/lib/pulp/content/units/rpm
+        patterns: "redhat-release-server-*.rpm"
+        recurse: yes
+      register: redhat_release_files
+      delegate_to: satellite.example.com
+
+    - name: Store the package file name
+      set_fact:
+        redhat_release_filename: "{{ (redhat_release_files | json_query('files[*].{mtime: mtime, path: path}') | sort(attribute='mtime') | last).path }}"
+
+    - name: Download redhat-release-server package file
+      fetch:
+        src: "{{ redhat_release_filename }}"
+        dest: "/tmp"
+      delegate_to: satellite.example.com
+
+    - name: Copy redhat-release-server package to host
+      copy:
+        src: "/tmp/{{ ansible_hostname }}/{{ redhat_release_filename }}"
+        dst: /usr/share/convert2rhel/redhat-release/Server
 
     - name: "Add {{ ansible_distribution_major_version }}Server to file /etc/yum/vars/releasever if it does not exist on this CentOS {{ ansible_distribution_major_version }} system"
       lineinfile:
@@ -66,7 +117,7 @@
       when: ansible_distribution == 'OracleLinux' 
 
     - name: Launch conversion asynchronously
-      command: convert2rhel -u {{ rhsm_username }} -p {{ rhsm_password }} --pool {{ rhsm_pool }} -v {{ rhel_variant }} -y
+      command: convert2rhel -o {{ satellite_organization }} -k {{ satellite_activationkey }} -v {{ rhel_variant }} -y
       async: "{{ convert2rhel_timeout }}"
       poll: 0
       register: convert2rhel_async
@@ -83,28 +134,10 @@
       reboot:
         reboot_timeout: 900
 
-    - name: Unregister from RHN
-      redhat_subscription:
-        state: absent
-
     - name: Clear YUM cache the hard way
       file:
         path: /var/cache/yum
         state: absent
-
-    - name: Install Katello CA packages
-      yum:
-        name:
-          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
-        state: present
-        update_cache: yes
-
-    - name: Register to Satellite
-      redhat_subscription:
-        state: present
-        activationkey: "{{ satellite_activationkey }}"
-        org_id: "{{ satellite_organization }}"
-        auto_attach: yes
 
     - name: Install required packages for Insights
       yum:
