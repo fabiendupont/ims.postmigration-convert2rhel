@@ -138,10 +138,10 @@
       reboot:
         reboot_timeout: 900
 
-    - name: Clear YUM cache the hard way
-      file:
-        path: /var/cache/yum
-        state: absent
+    - name: Enable Satellite tools repository
+      rhsm_repository:
+        name: rhel-7-server-satellite-tools-6.6-rpms
+        state: present
 
     - name: Install required packages for Insights
       yum:
