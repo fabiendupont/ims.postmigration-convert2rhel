@@ -61,42 +61,23 @@
         - /usr/share/convert2rhel/redhat-release/Server
         - /var/lib/rpm-state
 
-    - name: Download subscription-manager packages
-      yum:
-        name:
-          - subscription-manager
-          - subscription-manager-rhsm
-          - subscription-manager-rhsm-certificates
-        download_only: yes
-        download_dir: /usr/share/convert2rhel/subscription-manager
+    - include_tasks: loops/download_package.yml
+      loop:
+        - name: subscription-manager
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: subscription-manager-rhsm
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: subscription-manager-rhsm-certificates
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: redhat-release-server
+          dir: /usr/share/convert2rhel/redhat-release/Server
+      loop_control:
+        loop_var: package
 
     - name: Download Satellite CA certificate
       get_url:
         url: "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
         dest: /usr/share/convert2rhel/subscription-manager/katello-ca-consumer-latest.noarch.rpm
-
-    - name: Identify redhat-release-server package path
-      find:
-        paths: /var/lib/pulp/content/units/rpm
-        patterns: "redhat-release-server-*.rpm"
-        recurse: yes
-      register: redhat_release_files
-      delegate_to: satellite.example.com
-
-    - name: Store the package file name
-      set_fact:
-        redhat_release_filename: "{{ (redhat_release_files | json_query('files[*].{mtime: mtime, path: path}') | sort(attribute='mtime') | last).path }}"
-
-    - name: Download redhat-release-server package file
-      fetch:
-        src: "{{ redhat_release_filename }}"
-        dest: "/tmp"
-      delegate_to: satellite.example.com
-
-    - name: Copy redhat-release-server package to host
-      copy:
-        src: "/tmp/{{ inventory_hostname }}{{ redhat_release_filename }}"
-        dest: /usr/share/convert2rhel/redhat-release/Server
 
     - name: "Add {{ ansible_distribution_major_version }}Server to file /etc/yum/vars/releasever if it does not exist on this CentOS {{ ansible_distribution_major_version }} system"
       lineinfile:

@@ -1,0 +1,28 @@
+- name: Identify {{ package.name }} package path
+  find:
+    paths: /var/lib/pulp/content/units/rpm
+    patterns: "{{ package.name }}-*.rpm"
+    recurse: yes
+  register: package_files
+  delegate_to: "{{ satellite_host }}"
+
+- name: Store the package file name
+  set_fact:
+    package_filename: "{{ (package_files | json_query('files[*].{mtime: mtime, path: path}') | sort(attribute='mtime') | last).path }}"
+
+- name: Fetch {{ package.name }} package file
+  fetch:
+    src: "{{ package_filename }}"
+    dest: "/tmp"
+  delegate_to: "{{ satellite_host }}"
+
+- name: Copy {{ package.name }} package to host
+  copy:
+    src: "/tmp/{{ inventory_hostname }}{{ package_filename }}"
+    dest: "{{ package.dir }}"
+
+- name: Remove temporary folder for {{ inventory_hostname }}
+  file:
+    path: "/tmp/{{ inventory_hostname }}"
+    state: absent
+
