@@ -63,6 +63,8 @@
 
     - include_tasks: loops/download_package.yml
       loop:
+        - name: python-syspurpose
+          dir: /usr/share/convert2rhel/subscription-manager
         - name: subscription-manager
           dir: /usr/share/convert2rhel/subscription-manager
         - name: subscription-manager-rhsm
