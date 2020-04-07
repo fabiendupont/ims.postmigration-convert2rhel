@@ -36,12 +36,50 @@
     snapshot_mode: "cold"
 
 - block:
+    - name: Enabled EPEL repository
+      yum:
+        name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        state: present
+        update_cache: yes
+
     - name: Install convert2rhel package
       yum:
         name:
-          - "{{ convert2rhel_package_url }}"
+          - convert2rhel
         state: present
         update_cache: yes
+
+    - name: Create extra folders for convert2rhel
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+      with_items:
+        - /usr/share/convert2rhel/subscription-manager
+        - /usr/share/convert2rhel/redhat-release/Server
+        - /var/lib/rpm-state
+
+    - include_tasks: loops/download_package.yml
+      loop:
+        - name: python-syspurpose
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: subscription-manager
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: subscription-manager-rhsm
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: subscription-manager-rhsm-certificates
+          dir: /usr/share/convert2rhel/subscription-manager
+        - name: redhat-release-server
+          dir: /usr/share/convert2rhel/redhat-release/Server
+      loop_control:
+        loop_var: package
+
+    - name: Download Satellite CA certificate
+      get_url:
+        url: "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+        dest: /usr/share/convert2rhel/subscription-manager/katello-ca-consumer-latest.noarch.rpm
 
     - name: "Add {{ ansible_distribution_major_version }}Server to file /etc/yum/vars/releasever if it does not exist on this CentOS {{ ansible_distribution_major_version }} system"
       lineinfile:
@@ -66,7 +104,7 @@
       when: ansible_distribution == 'OracleLinux' 
 
     - name: Launch conversion asynchronously
-      command: convert2rhel -u {{ rhsm_username }} -p {{ rhsm_password }} --pool {{ rhsm_pool }} -v {{ rhel_variant }} -y
+      command: convert2rhel -o {{ satellite_organization }} -k {{ satellite_activationkey }} -v {{ rhel_variant }} -a -y --debug
       async: "{{ convert2rhel_timeout }}"
       poll: 0
       register: convert2rhel_async
@@ -83,28 +121,10 @@
       reboot:
         reboot_timeout: 900
 
-    - name: Unregister from RHN
-      redhat_subscription:
-        state: absent
-
-    - name: Clear YUM cache the hard way
-      file:
-        path: /var/cache/yum
-        state: absent
-
-    - name: Install Katello CA packages
-      yum:
-        name:
-          - "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+    - name: Enable Satellite tools repository
+      rhsm_repository:
+        name: rhel-7-server-satellite-tools-6.6-rpms
         state: present
-        update_cache: yes
-
-    - name: Register to Satellite
-      redhat_subscription:
-        state: present
-        activationkey: "{{ satellite_activationkey }}"
-        org_id: "{{ satellite_organization }}"
-        auto_attach: yes
 
     - name: Install required packages for Insights
       yum:
@@ -124,12 +144,12 @@
     - name: Register machine to Insights
       command: insights-client --register
 
-  rescue:
-    - name: Revert snapshot to previous state
-      include_role:
-        name: "ims.manageiq_vm_snapshot"
-      vars:
-        role_action: "revert"
-        snapshot_name: "Before convert2rhel"
-        snapshot_mode: "cold"
-        snapshot_delete_after_revert: true
+#  rescue:
+#    - name: Revert snapshot to previous state
+#      include_role:
+#        name: "ims.manageiq_vm_snapshot"
+#      vars:
+#        role_action: "revert"
+#        snapshot_name: "Before convert2rhel"
+#        snapshot_mode: "cold"
+#        snapshot_delete_after_revert: true
