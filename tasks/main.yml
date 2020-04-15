@@ -76,6 +76,12 @@
       loop_control:
         loop_var: package
 
+    - name: Remove temporary folder for {{ inventory_hostname }}
+      file:
+        path: "/tmp/{{ inventory_hostname }}"
+        state: absent
+      delegate_to: localhost
+
     - name: Download Satellite CA certificate
       get_url:
         url: "http://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"

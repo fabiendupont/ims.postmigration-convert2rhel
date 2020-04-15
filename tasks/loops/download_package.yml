@@ -21,8 +21,3 @@
     src: "/tmp/{{ inventory_hostname }}{{ package_filename }}"
     dest: "{{ package.dir }}"
 
-- name: Remove temporary folder for {{ inventory_hostname }}
-  file:
-    path: "/tmp/{{ inventory_hostname }}"
-    state: absent
-
