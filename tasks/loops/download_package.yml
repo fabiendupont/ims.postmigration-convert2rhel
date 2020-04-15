@@ -1,7 +1,7 @@
 - name: Identify {{ package.name }} package path
   find:
     paths: /var/lib/pulp/content/units/rpm
-    patterns: "{{ package.name }}-*.rpm"
+    patterns: "{{ package.name }}-[0-9]*.rpm"
     recurse: yes
   register: package_files
   delegate_to: "{{ satellite_host }}"
