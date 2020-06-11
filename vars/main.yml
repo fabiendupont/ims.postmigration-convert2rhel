@@ -1,6 +1,0 @@
----
-support_rhel_variants:
-  - Server
-  - Client
-  - Workstation
-  - ComputeNode

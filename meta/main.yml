@@ -1,9 +1,10 @@
 galaxy_info:
+  name: fdupont_redhat.ims_postmigration_convert2rhel
   author: Fabien Dupont
   description: This role convert the operating system to Red Hat Enterprise Linux
   company: Red Hat
 
-  license: GPLv3
+  license: license (Apache)
 
   min_ansible_version: 2.4
 

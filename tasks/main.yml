@@ -17,7 +17,6 @@
   assert:
     that:
       - "rhel_variant is defined"
-#      - "rhel_variant in supported_rhel_variants"
     msg: "RHEL variant is not defined or unsupported. See documentation."
 
 - name: Create snapshot before conversion
