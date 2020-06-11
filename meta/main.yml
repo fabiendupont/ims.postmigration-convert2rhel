@@ -15,4 +15,4 @@ galaxy_info:
   galaxy_tags:
     - ims
   dependencies:
-    - fdupont_redhat.ims_manageiq_vm_snapshot
+    - fdupont_redhat.ims_manageiq_vm_snapshot_ovirt

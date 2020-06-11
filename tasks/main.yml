@@ -21,7 +21,7 @@
 
 - name: Create snapshot before conversion
   include_role:
-    name: "ims.manageiq_vm_snapshot"
+    name: "fdupont_redhat.ims_manageiq_vm_snapshot_ovirt"
   vars:
     role_action: "create"
     snapshot_name: "Before convert2rhel"
@@ -77,7 +77,7 @@
   rescue:
     - name: Revert snapshot to previous state
       include_role:
-        name: "ims.manageiq_vm_snapshot"
+        name: "fdupont_redhat.ims_manageiq_vm_snapshot_ovirt"
       vars:
         role_action: "revert"
         snapshot_name: "Before convert2rhel"
