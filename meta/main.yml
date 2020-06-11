@@ -1,5 +1,5 @@
 galaxy_info:
-  name: fdupont_redhat.ims_postmigration_convert2rhel
+  role_name: ims_postmigration_convert2rhel
   author: Fabien Dupont
   description: This role convert the operating system to Red Hat Enterprise Linux
   company: Red Hat
